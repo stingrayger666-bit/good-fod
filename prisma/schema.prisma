@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  name           String
+  email          String   @unique
+  inviteCode     String   @unique
+  memberNumber   Int      @unique
+  points         Int      @default(100)
+  experience     Int      @default(0)
+  dailyExperience Int     @default(0)
+  passwordHash   String
+  passwordSalt   String
+  level          String   @default("新手級")
+  createdAt      DateTime @default(now())
+
+  reviews        Review[]
+  raffleEntries  RaffleEntry[]
+  redemptions    Redemption[]
+
+  @@index([email])
+}
+
+model Review {
+  id          String   @id @default(uuid())
+  userId      String?
+  userName    String
+  isAnonymous Boolean  @default(false)
+  product     String
+  category    String?
+  store       String
+  rating      Int
+  content     String
+  imageUrl    String?
+  imageUrls   String?
+  createdAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([store, category])
+  @@index([createdAt])
+}
+
+model RaffleEntry {
+  id          String   @id @default(uuid())
+  raffleId    String
+  raffleName  String
+  userId      String
+  pointsSpent Int
+  status      String
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Redemption {
+  id          String   @id @default(uuid())
+  rewardId    String
+  rewardName  String
+  userId      String
+  pointsSpent Int
+  status      String
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model AnonymousVisitor {
+  id        String   @id @default(uuid())
+  ipHash    String
+  name      String
+  redraws   Int      @default(0)
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([ipHash])
+}
